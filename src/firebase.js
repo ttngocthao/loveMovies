@@ -9,16 +9,20 @@ export const auth = firebase.auth();
 
 export const firestore = firebase.firestore();
 
-const getUserDocument = async (uid) => {
+export const getUserDocument = async (uid) => {
   if (!uid) return null;
   try {
     const userDocument = await firestore.doc(`users/${uid}`).get();
-    return {
-      uid,
-      ...userDocument.data(),
-    };
+    if (userDocument) {
+      return userDocument.data();
+    } else {
+      return { msg: "document cannot be found" };
+    }
+
+    //return { uid: uid, msg: "Testing" ,profile: userDocument.data()};
   } catch (error) {
     console.error("Error fetching user", error);
+    return error;
   }
 };
 

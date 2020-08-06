@@ -1,14 +1,28 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
-
+import { useHistory } from "react-router-dom";
+import { auth } from "../../firebase";
+import { useSetRecoilState } from "recoil";
+import { globalAuthState } from "../../index";
 const SignIn = (props) => {
   const [values, setValues] = useState({});
+  const setCurrentUser = useSetRecoilState(globalAuthState);
+
+  const history = useHistory();
+
   const handleChange = (e) => {
     setValues({ ...values, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(values);
+    const { email, password } = values;
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      console.log("sign in successfully");
+      history.push("/home");
+    } catch (error) {
+      return { msg: "Error while sign in", error };
+    }
   };
   return (
     <div>

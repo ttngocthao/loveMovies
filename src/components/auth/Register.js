@@ -10,13 +10,13 @@ const Register = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(values);
-    const { email, password, name, title } = values;
+    const { email, password, name } = values;
     try {
       const { user } = await auth.createUserWithEmailAndPassword(
         email,
         password
       );
-      generateUserDocument(user, { name, title });
+      generateUserDocument(user, { name });
     } catch (error) {
       console.log("error from frontend", error);
     }
@@ -25,7 +25,7 @@ const Register = (props) => {
     <div>
       <form onSubmit={handleSubmit}>
         <h5>Register</h5>
-        <div>
+        {/* <div>
           <label htmlFor="title">Title</label>
           <select name="title" onChange={handleChange}>
             <option value={0}>Select title</option>
@@ -33,7 +33,7 @@ const Register = (props) => {
             <option value="Mrs">Mrs</option>
             <option value="Miss">Miss</option>
           </select>
-        </div>
+        </div> */}
         <div>
           <label htmlFor="name">Name</label>
           <input type="input" name="name" onChange={handleChange} />

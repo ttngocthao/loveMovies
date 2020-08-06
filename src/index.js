@@ -2,12 +2,17 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
-
+import { RecoilRoot, atom } from "recoil";
 import * as serviceWorker from "./serviceWorker";
-
+export const globalAuthState = atom({
+  key: "globalAuthState",
+  default: null,
+});
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <RecoilRoot>
+      <App />
+    </RecoilRoot>
   </React.StrictMode>,
   document.getElementById("root")
 );
