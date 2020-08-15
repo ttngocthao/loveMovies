@@ -16,9 +16,14 @@ const Register = (props) => {
         email,
         password
       );
+      //add name to user profile
+      user.updateProfile({
+        displayName: name,
+      });
       generateUserDocument(user, { name });
     } catch (error) {
       console.log("error from frontend", error);
+      return error;
     }
   };
   return (

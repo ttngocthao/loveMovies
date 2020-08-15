@@ -10,6 +10,7 @@ import SignIn from "./components/auth/SignIn";
 import Register from "./components/auth/Register";
 import Home from "./components/views/Home";
 import Dashboard from "./components/views/dashboard/Dashboard";
+import AddMovieForm from "./components/movies/AddMovieForm";
 
 function App() {
   const [appLoading, setAppLoading] = useState(false);
@@ -50,6 +51,7 @@ function App() {
             </Route>
             <ProtectedRoute path="/home" component={Home} />
             <ProtectedRoute path="/dashboard" component={Dashboard} />
+            <ProtectedRoute path="/add-movie" component={AddMovieForm} />
           </Switch>
         </div>
       )}
