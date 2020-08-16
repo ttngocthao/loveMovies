@@ -1,31 +1,35 @@
-import React from "react";
-
+import React, { useState, useEffect, Fragment } from "react";
+import { useRecoilState } from "recoil";
+import { getAllMovies } from "../../firebase";
+import MovieList from "../movies/MovieList";
+import { globalMoviesState } from "../../index";
 const Home = (props) => {
+  const [isMovieListReady, setMovieListReady] = useState(false);
+  const [movieList, setMovieList] = useRecoilState(globalMoviesState);
+
+  useEffect(() => {
+    getAllMovies().then((res) => {
+      setMovieList(res);
+      setMovieListReady(true);
+    });
+  }, []);
+
   return (
     <div>
       <h1>This is home page</h1>
-
       <h2>List of movies here</h2>
-      <ul>
-        <li>
-          <h4>Reign - @Netflix</h4>
-          <h5>Genres: Drama series, history</h5>
-          <h5>4seasons</h5>
-          <h5>Finished</h5>
-          <img
-            style={{ maxWidth: "200px" }}
-            src="https://m.media-amazon.com/images/M/MV5BMjEwMDgzNjA1Ml5BMl5BanBnXkFtZTgwNjYyNDUzMTI@._V1_.jpg"
-            alt=""
+      {isMovieListReady ? (
+        movieList && movieList.length > 0 ? (
+          <MovieList
+            listData={movieList ? movieList : null}
+            filterCondition={{ adminApproved: true }}
           />
-          <h6>Post by Thao</h6>
-          <div>
-            Thao's view about this: Commodo incididunt irure dolore mollit. Do
-            consectetur consectetur magna reprehenderit. Culpa consequat in est
-            commodo minim in qui dolore mollit amet. Velit deserunt mollit in
-            velit anim ipsum voluptate Lorem ut do exercitation in id mollit.
-          </div>
-        </li>
-      </ul>
+        ) : (
+          <h3>No data to show</h3>
+        )
+      ) : (
+        <h3>Loading...</h3>
+      )}
     </div>
   );
 };

@@ -1,23 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Fragment } from "react";
+import { useHistory } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import { globalAuthState } from "../../../index";
+import { globalAuthState, globalMoviesState } from "../../../index";
 import { getUserDocument, uploadAvatar } from "../../../firebase";
+import MovieList from "../../movies/MovieList";
 const Dashboard = () => {
+  const history = useHistory();
   const [currentUser, setCurrentUser] = useRecoilState(globalAuthState);
+  const [allMoviesState, setAllMovieState] = useRecoilState(globalMoviesState);
+
   const [localState, setLocalState] = useState({
     isCurrentUserLoaded: false,
     avatarFile: null,
     avatarPreviewUrl: null,
+    userMovieIdList: null,
   });
-  const { avatarFile, avatarPreviewUrl } = localState;
-  const { userId } = currentUser;
+  const { avatarFile, avatarPreviewUrl, isCurrentUserLoaded } = localState;
+  const { userId, email, name, movieList = [] } = currentUser;
   useEffect(() => {
     getUserDocument(userId).then((res) => {
-      setCurrentUser({ ...currentUser, ...res });
+      setCurrentUser({ ...currentUser, ...res }); //updated global auth state
     });
+    setLocalState({ ...localState, isCurrentUserLoaded: true });
+    // getUserMovieList(userId).then((userMovieIdList) => {
+    //   setLocalState({
+    //     ...localState,
+    //     userMovieIdList,
+    //     isCurrentUserLoaded: true,
+    //   });
+    // });
   }, []);
-  console.log("get user profile", currentUser);
-  const { email, name, isCurrentUserLoaded } = currentUser.profile || {};
+
   const fileChangeHandle = (e) => {
     const file = e.target.files[0];
     console.log("file", file);
@@ -37,7 +50,9 @@ const Dashboard = () => {
   const submitHandle = (e) => {
     e.preventDefault();
     console.log("submit");
-    uploadAvatar(currentUser, avatarFile);
+    uploadAvatar(currentUser, avatarFile).then((res) => {
+      console.log(res);
+    });
   };
   const displayImg = () => {
     let imgUrl;
@@ -54,26 +69,37 @@ const Dashboard = () => {
   return (
     <div>
       <h1>Dashboard here</h1>
-      <figure style={{ width: "200px", height: "200px" }}>
-        <img style={{ width: "100%" }} alt="avatar" src={displayImg()} />
-      </figure>
+      {isCurrentUserLoaded ? (
+        <Fragment>
+          <figure style={{ width: "200px", height: "200px" }}>
+            <img style={{ width: "100%" }} alt="avatar" src={displayImg()} />
+          </figure>
+          <h2>{name}</h2>
+          <h3>{email}</h3>
+          <form onSubmit={submitHandle}>
+            <input
+              type="file"
+              onChange={fileChangeHandle}
+              name="avatar"
+              accept={"image/png,image/jpg"}
+            />
+            <button>Save</button>
+          </form>
+          <div>
+            <h2>My list</h2>
 
-      <h2>{name}</h2>
-      <h3>{email}</h3>
-      <form onSubmit={submitHandle}>
-        <input
-          type="file"
-          onChange={fileChangeHandle}
-          name="avatar"
-          accept={"image/png,image/jpg"}
-        />
-        <button>Save</button>
-      </form>
-
-      <div>
-        <h2>My list</h2>
-        <button onClick={() => alert("ADD MOVIE")}>Add Movie</button>
-      </div>
+            <button
+              onClick={() => {
+                history.push("/add-movie");
+              }}
+            >
+              Add Movie
+            </button>
+          </div>
+        </Fragment>
+      ) : (
+        <Fragment>Loading...</Fragment>
+      )}
     </div>
   );
 };

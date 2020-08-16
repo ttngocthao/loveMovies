@@ -1,12 +1,16 @@
 import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import PropTypes from "prop-types";
 import { generateUserDocument, auth } from "../../firebase";
 
 const Register = (props) => {
   const [values, setValues] = useState({});
+  const history = useHistory();
+
   const handleChange = (e) => {
     setValues({ ...values, [e.target.name]: e.target.value });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(values);
@@ -20,12 +24,20 @@ const Register = (props) => {
       user.updateProfile({
         displayName: name,
       });
-      generateUserDocument(user, { name });
+      generateUserDocument(user, { name }).then((res) => {
+        if (res.status === 200) {
+          history.push("/dashboard");
+        } else {
+          console.error(res);
+          return res;
+        }
+      });
     } catch (error) {
       console.log("error from frontend", error);
       return error;
     }
   };
+
   return (
     <div>
       <form onSubmit={handleSubmit}>

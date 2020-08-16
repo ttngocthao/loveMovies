@@ -19,18 +19,16 @@ export const getUserDocument = async (uid) => {
     if (userDocument) {
       return userDocument.data();
     } else {
-      return { msg: "document cannot be found" };
+      return { status: 400, errMsg: "document cannot be found" };
     }
-
-    //return { uid: uid, msg: "Testing" ,profile: userDocument.data()};
   } catch (error) {
     console.error("Error fetching user", error);
-    return error;
+    return { status: 400, errMsg: error };
   }
 };
 
 export const generateUserDocument = async (user, additionalData) => {
-  if (!user) return;
+  if (!user) return { status: 400, errMsg: "User is invalid" };
   console.log("in generateDoc function");
   const userRef = firestore.doc(`users/${user.uid}`);
   const snapshot = await userRef.get();
@@ -43,16 +41,16 @@ export const generateUserDocument = async (user, additionalData) => {
         memberSince: new Date(),
         ...additionalData,
       });
+      return { status: 200, msg: "user document successfully created" };
     } catch (error) {
       console.error("Error creating user document", error);
+      return { status: 400, errMsg: "Error creating user document" };
     }
   }
   return getUserDocument(user.uid);
 };
 
-export const uploadAvatar = async (user, file) => {
-  if (!user) return;
-
+const getFileExtenstionForImg = (file) => {
   let fileExtension;
   if (file.type === "image/jpeg") {
     fileExtension = "jpg";
@@ -60,9 +58,16 @@ export const uploadAvatar = async (user, file) => {
   if (file.type === "image/png") {
     fileExtension = "png";
   }
+  return fileExtension;
+};
+
+export const uploadAvatar = async (user, file) => {
+  if (!user) return;
+
+  const fileExtension = getFileExtenstionForImg(file);
 
   const imgRef = storageRef.child(
-    `${user.userId}/avatar/${user.name}.${fileExtension}`
+    `users/${user.userId}/avatar/${user.name}.${fileExtension}`
   );
 
   const userRef = firestore.doc(`users/${user.userId}`);
@@ -73,21 +78,94 @@ export const uploadAvatar = async (user, file) => {
     try {
       const imgSnapshot = await imgRef.put(file); //upload image to storage
       const imgUrl = await imgSnapshot.ref.getDownloadURL();
-      console.log("imgSnapshot", imgUrl);
+      // console.log("imgSnapshot", imgUrl);
       await userRef.update({
         photoURL: imgUrl,
       }); //update profile in database
-      console.log("update avatar to db");
 
       await auth.currentUser.updateProfile({
         photoURL: imgUrl,
       }); //update profile in auth
-      console.log("update avatar to user auth");
-      console.log("upload avatar successfully");
+
+      return { status: 200, msg: "successfully updated avatar" };
     } catch (error) {
+      console.error(error);
       return { status: 400, errorMsg: error };
     }
   } else {
     console.log("could not find snapshot");
+  }
+};
+
+export const addMovie = async (data) => {
+  try {
+    const creator = await auth.currentUser;
+    const {
+      creatorView,
+      genres,
+      hasFinished,
+      movieName,
+      moviePoster,
+      provider,
+      series,
+    } = data;
+    //extra fields ---> creator: creator.uid,createAt: new Date(),adminApproved: false}
+
+    //create a doc in moives collection
+    const movieRef = await firestore.collection("movies").add({
+      movieName,
+      provider,
+      series,
+      creatorView,
+      genres,
+      hasFinished,
+      creator: {
+        userId: creator.uid,
+        userName: creator.displayName,
+        avatar: creator.photoURL,
+      },
+      createAt: new Date(),
+      adminApproved: false,
+    });
+    console.log("movieRef", movieRef.id);
+
+    //upload image to storage
+    const fileExtension = getFileExtenstionForImg(moviePoster);
+    const moviePosterRef = storageRef.child(
+      `movies/${movieRef.id}/${movieName}.${fileExtension}`
+    );
+    const moviePosterSnapshot = await moviePosterRef.put(moviePoster);
+    const moviePosterUrl = await moviePosterSnapshot.ref.getDownloadURL();
+    //add poster to movies collection
+    await movieRef.update({
+      moviePoster: moviePosterUrl,
+    });
+    //get profile of the creator
+    const userRef = await firestore.doc(`users/${creator.uid}`);
+    //add the doc id to the user profile db
+    await userRef.update({
+      movieList: firebase.firestore.FieldValue.arrayUnion(movieRef.id),
+    });
+    console.log("successfully add movie");
+  } catch (error) {
+    console.error("error adding movie", error);
+    return { status: 400, errorMsg: error };
+  }
+};
+
+export const getAllMovies = async () => {
+  try {
+    let movieList = [];
+    const querySnapshot = await firestore.collection("movies").get();
+
+    querySnapshot.forEach((doc) => {
+      movieList.push({ movieId: doc.id, ...doc.data() });
+    });
+
+    console.log("all movies", movieList);
+    return movieList;
+  } catch (error) {
+    console.error("error getting all movies", error);
+    return { status: 400, errorMsg: error };
   }
 };

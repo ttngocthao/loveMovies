@@ -18,7 +18,6 @@ function App() {
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log("user exists", user);
         setCurrentUser({ userId: user.uid, email: user.email });
         setAppLoading(true);
       } else {

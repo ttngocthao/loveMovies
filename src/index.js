@@ -8,6 +8,10 @@ export const globalAuthState = atom({
   key: "globalAuthState",
   default: null,
 });
+export const globalMoviesState = atom({
+  key: "globalMoviesState",
+  default: null,
+});
 ReactDOM.render(
   <React.StrictMode>
     <RecoilRoot>
