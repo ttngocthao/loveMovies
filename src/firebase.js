@@ -169,3 +169,25 @@ export const getAllMovies = async () => {
     return { status: 400, errorMsg: error };
   }
 };
+
+export const getUserMovieList = async (idListArr) => {
+  if (idListArr.length <= 0) {
+    console.log("nothing to get");
+    return;
+  }
+  try {
+    let movieList = [];
+    idListArr.map(async (id) => {
+      const movieObj = await firestore.doc(`movies/${id}`).get();
+      if (movieObj) {
+        movieList.push(movieObj.data());
+      } else {
+        console.log(`could not find movie with id=${id} `);
+      }
+    });
+    return movieList;
+  } catch (error) {
+    console.error("error getting user movies", error);
+    return { status: 400, errorMsg: error };
+  }
+};

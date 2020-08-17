@@ -2,8 +2,12 @@ import React, { useEffect, useState, Fragment } from "react";
 import { useHistory } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { globalAuthState, globalMoviesState } from "../../../index";
-import { getUserDocument, uploadAvatar } from "../../../firebase";
-import MovieList from "../../movies/MovieList";
+import {
+  getUserDocument,
+  uploadAvatar,
+  getUserMovieList,
+} from "../../../firebase";
+
 const Dashboard = () => {
   const history = useHistory();
   const [currentUser, setCurrentUser] = useRecoilState(globalAuthState);
@@ -13,22 +17,32 @@ const Dashboard = () => {
     isCurrentUserLoaded: false,
     avatarFile: null,
     avatarPreviewUrl: null,
-    userMovieIdList: null,
+    movieList: null,
   });
   const { avatarFile, avatarPreviewUrl, isCurrentUserLoaded } = localState;
-  const { userId, email, name, movieList = [] } = currentUser;
+  const { userId, email, name } = currentUser;
   useEffect(() => {
     getUserDocument(userId).then((res) => {
       setCurrentUser({ ...currentUser, ...res }); //updated global auth state
+
+      //get the movie base on the id list
+      if (res.movieList && res.movieList.length !== 0) {
+        getUserMovieList(res.movieList).then((resGetMovieList) => {
+          setLocalState({
+            ...localState,
+            movieList: resGetMovieList,
+            isCurrentUserLoaded: true,
+          });
+        });
+      } else {
+        setLocalState({
+          ...localState,
+          isCurrentUserLoaded: true,
+        });
+      }
     });
-    setLocalState({ ...localState, isCurrentUserLoaded: true });
-    // getUserMovieList(userId).then((userMovieIdList) => {
-    //   setLocalState({
-    //     ...localState,
-    //     userMovieIdList,
-    //     isCurrentUserLoaded: true,
-    //   });
-    // });
+
+    //listId.map(id=>listObj.filter(i=>i.id===id))----idea for listing user movie list
   }, []);
 
   const fileChangeHandle = (e) => {
@@ -66,6 +80,11 @@ const Dashboard = () => {
     }
     return imgUrl;
   };
+  console.log(
+    "movie list from dashboard",
+    allMoviesState,
+    localState.movieList
+  );
   return (
     <div>
       <h1>Dashboard here</h1>

@@ -3,6 +3,7 @@ import { useRecoilState } from "recoil";
 import { getAllMovies } from "../../firebase";
 import MovieList from "../movies/MovieList";
 import { globalMoviesState } from "../../index";
+import { Link } from "react-router-dom";
 const Home = (props) => {
   const [isMovieListReady, setMovieListReady] = useState(false);
   const [movieList, setMovieList] = useRecoilState(globalMoviesState);
@@ -10,6 +11,7 @@ const Home = (props) => {
   useEffect(() => {
     getAllMovies().then((res) => {
       setMovieList(res);
+
       setMovieListReady(true);
     });
   }, []);
@@ -17,6 +19,7 @@ const Home = (props) => {
   return (
     <div>
       <h1>This is home page</h1>
+      <Link to="/dashboard">go to dashboard</Link>
       <h2>List of movies here</h2>
       {isMovieListReady ? (
         movieList && movieList.length > 0 ? (
